@@ -26,7 +26,7 @@ app = FastAPI(title="HIAS Controller Core", version="0.2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -158,13 +158,7 @@ async def event_stream(request: Request):
             SSE_CLIENTS.remove(queue)
     return StreamingResponse(
         event_generator(), 
-        media_type="text/event-stream",
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        }
+        media_type="text/event-stream"
     )
 
 @app.post("/manual/override", response_model=ControllerEvent)

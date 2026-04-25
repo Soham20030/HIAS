@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ReviewCard from '../components/ui/ReviewCard';
 import { ShieldAlert } from 'lucide-react';
 import { API_ENDPOINTS } from '../api/config';
 
