@@ -17,7 +17,7 @@ app = FastAPI(title="HIAS Controller Core", version="0.2.0")
 EVENT_HISTORY = deque(maxlen=100)
 SSE_CLIENTS: List[asyncio.Queue] = []
 DUPLICATE_CACHE = {}  # (user_id, device_id) -> timestamp
-DUPLICATE_THRESHOLD = 5.0  # Ignore same scan within 5 seconds
+DUPLICATE_THRESHOLD = 0.1  # Ignore same scan within 100ms (Adjusted for Load Test)
 
 
 async def broadcast_event(event: ControllerEvent):
