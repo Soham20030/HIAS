@@ -3,23 +3,20 @@
 
 import json
 import os
+import requests
 from datetime import datetime
 
-LOG_FILE = "logs/events.jsonl"
-
-
-def _ensure_log_dir():
-    os.makedirs("logs", exist_ok=True)
-
+LOGS_SERVICE_URL = "http://127.0.0.1:8001/events"
 
 def log_event(event: dict) -> None:
     """
-    Persist a canonical controller event to the event log.
-    Format: JSONL (one JSON object per line) for easy streaming.
+    Forward a canonical controller event to the Truth Layer (Logging Service).
     """
-    _ensure_log_dir()
-    with open(LOG_FILE, "a") as f:
-        f.write(json.dumps(event) + "\n")
+    try:
+        requests.post(LOGS_SERVICE_URL, json=event, timeout=2)
+    except Exception as e:
+        print(f"[EVENT_LOG_FAIL] Could not send event to Truth Layer: {e}")
+    
     print(f"[EVENT_LOG] trace_id={event.get('trace_id')} | "
           f"decision={event.get('decision')} | "
           f"user_id={event.get('user_id')}")
@@ -27,16 +24,16 @@ def log_event(event: dict) -> None:
 
 def log_relay(trace_id: str, user_id: str) -> None:
     """
-    Log a relay trigger event separately for hardware audit trail.
+    Forward a relay trigger event to the Truth Layer.
     """
-    _ensure_log_dir()
     relay_entry = {
         "type": "RELAY_TRIGGER",
         "trace_id": trace_id,
         "user_id": user_id,
         "timestamp": datetime.now().isoformat(),
     }
-    relay_log = "logs/relay.jsonl"
-    with open(relay_log, "a") as f:
-        f.write(json.dumps(relay_entry) + "\n")
+    try:
+        requests.post(LOGS_SERVICE_URL, json=relay_entry, timeout=2)
+    except Exception as e:
+        print(f"[RELAY_LOG_FAIL] Could not send relay to Truth Layer: {e}")
 
