@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BarChart3, Download, PieChart, TrendingUp, Calendar, FileText } from 'lucide-react';
 import { API_ENDPOINTS } from '../api/config';
 

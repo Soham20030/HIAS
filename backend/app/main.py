@@ -156,7 +156,16 @@ async def event_stream(request: Request):
             pass
         finally:
             SSE_CLIENTS.remove(queue)
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(), 
+        media_type="text/event-stream",
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
 @app.post("/manual/override", response_model=ControllerEvent)
 async def manual_override(db: Session = Depends(get_db)):

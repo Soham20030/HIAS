@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Bell, ShieldAlert, Cpu, Settings, Clock, Trash2 } from 'lucide-react';
 import { API_ENDPOINTS } from '../api/config';
 
