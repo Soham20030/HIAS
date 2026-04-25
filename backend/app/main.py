@@ -25,8 +25,8 @@ app = FastAPI(title="HIAS Controller Core", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=["https://hias-frontend.onrender.com", "http://localhost:5173"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -209,21 +209,31 @@ async def process_review_action(data: ReviewAction, db: Session = Depends(get_db
         open_gate(event.trace_id, event.user_id)
     else:
         event.decision = Decision.DENY
-    # Update DB
-    db_event = Event(
-        trace_id=event.trace_id,
-        user_id=event.user_id,
-        name=event.name,
-        direction=event.direction,
-        method=event.method,
-        decision=event.decision,
-        reason=event.reason,
-        device_id=event.device_id,
-        timestamp=datetime.fromisoformat(event.timestamp)
-    )
-    db.add(db_event)
-    db.commit()
+    # Update existing event in DB
+    db_event = db.query(Event).filter(Event.trace_id == event.trace_id).first()
+    if db_event:
+        db_event.decision = event.decision
+        db_event.reason = event.reason
+        db.commit()
+    else:
+        # Fallback if not found (shouldn't happen)
+        db_event = Event(
+            trace_id=event.trace_id,
+            user_id=event.user_id,
+            name=event.name,
+            direction=event.direction,
+            method=event.method,
+            decision=event.decision,
+            reason=event.reason,
+            device_id=event.device_id,
+            timestamp=datetime.fromisoformat(event.timestamp)
+        )
+        db.add(db_event)
+        db.commit()
+    
+    # Broadcast the decision to the live feed
     await broadcast_event(event)
+    
     return {"status": "success", "decision": event.decision}
 
 @app.post("/simulate/review")
@@ -295,6 +305,13 @@ async def get_alerts(db: Session = Depends(get_db)):
             "severity": "Low", "timestamp": datetime.now().isoformat()
         })
     return sorted(alerts, key=lambda x: x["timestamp"], reverse=True)
+
+@app.post("/alerts/clear")
+async def clear_alerts(db: Session = Depends(get_db)):
+    """Clears all events from the database (effectively clearing alerts)."""
+    db.query(Event).delete()
+    db.commit()
+    return {"status": "success"}
 
 @app.get("/users")
 async def get_all_users(db: Session = Depends(get_db)):

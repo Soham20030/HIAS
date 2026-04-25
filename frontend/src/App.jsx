@@ -14,6 +14,7 @@ import ReviewQueue from './screens/ReviewQueue';
 import SystemStatus from './screens/SystemStatus';
 import UsersScreen from './screens/Users';
 import AlertsScreen from './screens/Alerts';
+import ReportsScreen from './screens/Reports';
 import SettingsScreen from './screens/Settings';
 import { API_ENDPOINTS } from './api/config';
 

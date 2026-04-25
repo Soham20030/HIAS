@@ -23,6 +23,16 @@ export default function Alerts() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleClearAll = async () => {
+    if (!window.confirm("Are you sure you want to clear all alerts and logs?")) return;
+    try {
+      await fetch(`${API_ENDPOINTS.ALERTS}/clear`, { method: 'POST' });
+      setAlerts([]);
+    } catch (err) {
+      console.error("Failed to clear alerts", err);
+    }
+  };
+
   const getSeverityColor = (sev) => {
     if (sev === 'High') return '#ef4444';
     if (sev === 'Medium') return '#eab308';
@@ -44,7 +54,9 @@ export default function Alerts() {
           </h1>
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>Real-time security and hardware notifications</p>
         </div>
-        <button style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button 
+          onClick={handleClearAll}
+          style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trash2 size={16} /> CLEAR ALL
         </button>
       </div>
