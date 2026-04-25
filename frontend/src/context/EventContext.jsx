@@ -48,7 +48,8 @@ export function EventProvider({ children }) {
     try {
       const res = await fetch(`${API_ENDPOINTS.API_BASE_URL}/manual/override`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
       });
       return await res.json();
     } catch (err) {

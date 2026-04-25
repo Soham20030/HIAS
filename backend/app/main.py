@@ -162,9 +162,16 @@ async def event_stream(request: Request):
     )
 
 @app.post("/manual/override", response_model=ControllerEvent)
-async def manual_override(db: Session = Depends(get_db)):
+async def manual_override(payload: dict, db: Session = Depends(get_db)):
+    reason_text = payload.get("reason", "No reason provided")
     event = process_access_request(db, "S100", Method.MANUAL, "manual_console_01")
     if event:
+        event.reason = reason_text
+        # Update the reason in DB too
+        db_event = db.query(Event).filter(Event.trace_id == event.trace_id).first()
+        if db_event:
+            db_event.reason = reason_text
+            db.commit()
         await broadcast_event(event)
     return event
 
