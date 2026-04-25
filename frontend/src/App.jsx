@@ -14,8 +14,8 @@ import ReviewQueue from './screens/ReviewQueue';
 import SystemStatus from './screens/SystemStatus';
 import UsersScreen from './screens/Users';
 import AlertsScreen from './screens/Alerts';
-import ReportsScreen from './screens/Reports';
 import SettingsScreen from './screens/Settings';
+import { API_ENDPOINTS } from './api/config';
 
 function Sidebar({ activeTab, setActiveTab }) {
   const menuItems = [
@@ -145,7 +145,7 @@ function RightPanel() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch('http://localhost:8000/system/devices');
+        const res = await fetch(API_ENDPOINTS.SYSTEM_DEVICES);
         const data = await res.json();
         setDeviceStatus(data);
       } catch (err) {
@@ -338,7 +338,7 @@ function AppContent() {
                 onChange={async (e) => {
                   const q = e.target.value;
                   if (q.length > 1) {
-                    const res = await fetch(`http://localhost:8000/users/search?q=${q}`);
+                    const res = await fetch(`${API_ENDPOINTS.USERS_SEARCH}?q=${q}`);
                     const data = await res.json();
                     setSearchResults(data);
                   } else {

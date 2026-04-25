@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Activity, Server, Database, Globe, Cpu, Clock, AlertTriangle } from 'lucide-react';
+import { API_ENDPOINTS } from '../api/config';
 
 export default function SystemStatus() {
   const [services, setServices] = useState([]);
@@ -8,7 +9,7 @@ export default function SystemStatus() {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const res = await fetch('http://localhost:8000/system/devices');
+        const res = await fetch(API_ENDPOINTS.SYSTEM_DEVICES);
         const data = await res.json();
         setServices(data);
       } catch (err) {

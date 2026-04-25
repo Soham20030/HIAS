@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { BarChart3, Download, PieChart, TrendingUp, Calendar, FileText } from 'lucide-react';
+import { API_ENDPOINTS } from '../api/config';
 
 export default function Reports() {
   const [stats, setStats] = useState(null);
@@ -8,7 +8,7 @@ export default function Reports() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('http://localhost:8000/reports/stats');
+        const res = await fetch(API_ENDPOINTS.REPORTS_STATS);
         const data = await res.json();
         setStats(data);
       } catch (err) {
@@ -21,7 +21,7 @@ export default function Reports() {
   }, []);
 
   const handleExport = () => {
-    window.open('http://localhost:8000/reports/export', '_blank');
+    window.open(API_ENDPOINTS.REPORTS_EXPORT, '_blank');
   };
 
   if (loading) return <div style={{ padding: '20px', color: '#64748b' }}>Generating analytics...</div>;

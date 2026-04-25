@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Bell, ShieldAlert, Cpu, Settings, Clock, Trash2 } from 'lucide-react';
+import { API_ENDPOINTS } from '../api/config';
 
 export default function Alerts() {
   const [alerts, setAlerts] = useState([]);
@@ -8,7 +8,7 @@ export default function Alerts() {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const res = await fetch('http://localhost:8000/alerts');
+        const res = await fetch(API_ENDPOINTS.ALERTS);
         const data = await res.json();
         setAlerts(data);
       } catch (err) {

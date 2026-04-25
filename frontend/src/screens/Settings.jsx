@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, ShieldAlert, Clock, Save, RefreshCcw, Bell } from 'lucide-react';
+import { API_ENDPOINTS } from '../api/config';
 
 export default function Settings() {
   const [settings, setSettings] = useState({
@@ -14,7 +15,7 @@ export default function Settings() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('http://localhost:8000/settings');
+        const res = await fetch(API_ENDPOINTS.SETTINGS);
         const data = await res.json();
         setSettings(data);
       } catch (err) {
@@ -29,7 +30,7 @@ export default function Settings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch('http://localhost:8000/settings', {
+      await fetch(API_ENDPOINTS.SETTINGS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)

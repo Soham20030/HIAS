@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users as UsersIcon, Search, UserPlus, MoreVertical, Shield, User } from 'lucide-react';
+import { API_ENDPOINTS } from '../api/config';
 
 export default function Users({ initialSearch = '' }) {
   const [users, setUsers] = useState([]);
@@ -11,7 +12,7 @@ export default function Users({ initialSearch = '' }) {
   const fetchUsers = async (query = '') => {
     setLoading(true);
     try {
-      const url = query ? `http://localhost:8000/users/search?q=${query}` : 'http://localhost:8000/users';
+      const url = query ? `${API_ENDPOINTS.USERS_SEARCH}?q=${query}` : API_ENDPOINTS.USERS;
       const res = await fetch(url);
       const data = await res.json();
       setUsers(data);
@@ -31,7 +32,7 @@ export default function Users({ initialSearch = '' }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:8000/users', {
+      const res = await fetch(API_ENDPOINTS.USERS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser)

@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import ReviewCard from '../components/ui/ReviewCard';
 import { ShieldAlert } from 'lucide-react';
+import { API_ENDPOINTS } from '../api/config';
 
 export default function ReviewQueue({ onSearchUser }) {
   const [items, setItems] = useState([]);
@@ -9,7 +8,7 @@ export default function ReviewQueue({ onSearchUser }) {
 
   const fetchQueue = async () => {
     try {
-      const res = await fetch('http://localhost:8000/review/queue');
+      const res = await fetch(API_ENDPOINTS.REVIEW_QUEUE);
       const data = await res.json();
       setItems(data);
     } catch (err) {
@@ -32,7 +31,7 @@ export default function ReviewQueue({ onSearchUser }) {
     }
     
     try {
-      await fetch('http://localhost:8000/review/action', {
+      await fetch(API_ENDPOINTS.REVIEW_ACTION, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trace_id, action })
@@ -44,7 +43,7 @@ export default function ReviewQueue({ onSearchUser }) {
   };
 
   const simulateEvent = async () => {
-    await fetch('http://localhost:8000/simulate/review', { method: 'POST' });
+    await fetch(API_ENDPOINTS.SIMULATE_REVIEW, { method: 'POST' });
     fetchQueue();
   };
 

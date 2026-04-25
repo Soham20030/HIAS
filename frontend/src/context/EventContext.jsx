@@ -1,17 +1,17 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { API_ENDPOINTS } from '../api/config';
 
 const EventContext = createContext();
 
 export function EventProvider({ children }) {
   const [events, setEvents] = useState([]);
   const [connected, setConnected] = useState(false);
-  const piIp = "localhost"; 
 
   useEffect(() => {
     // Initial Fetch from Python Backend
     const fetchEvents = async () => {
       try {
-        const res = await fetch(`http://${piIp}:8000/events?limit=50`);
+        const res = await fetch(`${API_ENDPOINTS.EVENTS}?limit=50`);
         const data = await res.json();
         if (Array.isArray(data)) {
           setEvents(data.reverse()); // Newest first
@@ -27,7 +27,7 @@ export function EventProvider({ children }) {
     fetchEvents();
 
     // SSE Connection to Python Backend
-    const evtSource = new EventSource(`http://${piIp}:8000/events/stream`);
+    const evtSource = new EventSource(API_ENDPOINTS.STREAM);
     
     evtSource.onmessage = (e) => {
       try {
@@ -46,7 +46,7 @@ export function EventProvider({ children }) {
 
   const triggerOverride = async (reason) => {
     try {
-      const res = await fetch(`http://${piIp}:8000/manual/override`, {
+      const res = await fetch(`${API_ENDPOINTS.API_BASE_URL}/manual/override`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -63,7 +63,7 @@ export function EventProvider({ children }) {
     ];
     const user = users[Math.floor(Math.random() * users.length)];
     try {
-      await fetch(`http://${piIp}:8000/access/event`, {
+      await fetch(API_ENDPOINTS.ACCESS_EVENT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...user, device_id: "booth_1_in" })
