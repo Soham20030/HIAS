@@ -148,7 +148,18 @@ function RightPanel() {
       try {
         const res = await fetch(API_ENDPOINTS.SYSTEM_DEVICES);
         const data = await res.json();
-        setDeviceStatus(data);
+        if (Array.isArray(data)) {
+          const mappedStatus = {
+            face_devices: data.find(d => d.name.includes('Face'))?.status || 'Offline',
+            rfid_readers: data.find(d => d.name.includes('RFID'))?.status || 'Offline',
+            relay: data.find(d => d.name.includes('Relay'))?.status || 'Offline',
+            network: 'Online',
+            power_supply: 'Normal'
+          };
+          setDeviceStatus(mappedStatus);
+        } else {
+          setDeviceStatus(data);
+        }
       } catch (err) {
         console.warn("Failed to fetch device status");
       }

@@ -159,7 +159,12 @@ async def event_stream(request: Request):
             SSE_CLIENTS.remove(queue)
     return StreamingResponse(
         event_generator(), 
-        media_type="text/event-stream"
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
     )
 
 @app.post("/manual/override", response_model=ControllerEvent)
