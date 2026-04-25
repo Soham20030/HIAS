@@ -64,15 +64,16 @@ async def broadcast_event(event: ControllerEvent):
     for queue in SSE_CLIENTS:
         await queue.put(data)
 
-def process_access_request(db: Session, user_id: str, method: Method, device_id: str) -> Optional[ControllerEvent]:
+def process_access_request(db: Session, user_id: str, method: Method, device_id: str, bypass_cache: bool = False) -> Optional[ControllerEvent]:
     """Core logic for processing access requests from any source."""
     # 1. Duplicate Prevention
-    now = asyncio.get_event_loop().time()
-    dup_key = (user_id, device_id)
-    if dup_key in DUPLICATE_CACHE:
-        if now - DUPLICATE_CACHE[dup_key] < DUPLICATE_THRESHOLD:
-            return None
-    DUPLICATE_CACHE[dup_key] = now
+    if not bypass_cache:
+        now = asyncio.get_event_loop().time()
+        dup_key = (user_id, device_id)
+        if dup_key in DUPLICATE_CACHE:
+            if now - DUPLICATE_CACHE[dup_key] < DUPLICATE_THRESHOLD:
+                return None
+        DUPLICATE_CACHE[dup_key] = now
 
     # 2. Enrichment & Decision
     decision, reason, name = evaluate(db, user_id, SYSTEM_SETTINGS)
@@ -164,7 +165,8 @@ async def event_stream(request: Request):
 @app.post("/manual/override", response_model=ControllerEvent)
 async def manual_override(payload: dict, db: Session = Depends(get_db)):
     reason_text = payload.get("reason", "No reason provided")
-    event = process_access_request(db, "S100", Method.MANUAL, "manual_console_01")
+    # Use bypass_cache=True for manual overrides
+    event = process_access_request(db, "S100", Method.MANUAL, "manual_console_01", bypass_cache=True)
     if event:
         event.reason = reason_text
         # Update the reason in DB too

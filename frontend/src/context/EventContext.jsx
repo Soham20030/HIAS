@@ -51,7 +51,9 @@ export function EventProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason })
       });
-      return await res.json();
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const text = await res.text();
+      return text ? JSON.parse(text) : {};
     } catch (err) {
       console.error("Override failed", err);
     }
