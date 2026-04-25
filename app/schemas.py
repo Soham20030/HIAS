@@ -1,14 +1,19 @@
 # Canonical event schema for all HIAS controller events
-import time
+from datetime import datetime
 import uuid
 from enum import Enum
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
-class EventType(str, Enum):
-    ENTRY = "ENTRY"
-    EXIT = "EXIT"
+class Direction(str, Enum):
+    IN = "IN"
+    OUT = "OUT"
+
+
+class Method(str, Enum):
+    RFID = "RFID"
+    FACE = "FACE"
+    MANUAL = "MANUAL"
 
 
 class Decision(str, Enum):
@@ -22,40 +27,24 @@ class Reason(str, Enum):
     TIME_BLOCK = "TIME_BLOCK"
 
 
-class Source(str, Enum):
-    RFID_1 = "rfid_1"
-    FACE_1 = "face_1"
-    MANUAL = "manual"
+# --- Inbound Payloads ---
+
+class AccessInput(BaseModel):
+    user_id: str
+    method: Method
+    device_id: str
 
 
-# --- Inbound Payloads (what devices send) ---
-
-class RFIDPayload(BaseModel):
-    source: str = "rfid_1"
-    student_id: str
-    event: EventType
-
-
-class FacePayload(BaseModel):
-    source: str = "face_1"
-    student_id: str
-    event: EventType
-
-
-class ManualOverridePayload(BaseModel):
-    source: str = "manual"
-    student_id: str
-    event: EventType
-    operator_id: str
-
-
-# --- Canonical Event (controller output) ---
+# --- Canonical Event ---
 
 class ControllerEvent(BaseModel):
     trace_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    source: str
-    student_id: str
-    event: EventType
+    user_id: str
+    name: str
+    direction: Direction
+    method: Method
     decision: Decision
     reason: Reason
-    timestamp: int = Field(default_factory=lambda: int(time.time()))
+    device_id: str
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+

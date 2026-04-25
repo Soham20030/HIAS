@@ -22,10 +22,10 @@ def log_event(event: dict) -> None:
         f.write(json.dumps(event) + "\n")
     print(f"[EVENT_LOG] trace_id={event.get('trace_id')} | "
           f"decision={event.get('decision')} | "
-          f"student_id={event.get('student_id')}")
+          f"user_id={event.get('user_id')}")
 
 
-def log_relay(trace_id: str, student_id: str) -> None:
+def log_relay(trace_id: str, user_id: str) -> None:
     """
     Log a relay trigger event separately for hardware audit trail.
     """
@@ -33,9 +33,10 @@ def log_relay(trace_id: str, student_id: str) -> None:
     relay_entry = {
         "type": "RELAY_TRIGGER",
         "trace_id": trace_id,
-        "student_id": student_id,
-        "timestamp": int(datetime.utcnow().timestamp()),
+        "user_id": user_id,
+        "timestamp": datetime.now().isoformat(),
     }
     relay_log = "logs/relay.jsonl"
     with open(relay_log, "a") as f:
         f.write(json.dumps(relay_entry) + "\n")
+
