@@ -1,0 +1,6 @@
+{
+    "emergency_mode": false,
+    "access_window_start": "07:00",
+    "access_window_end": "21:00",
+    "require_admin_approval": false
+}

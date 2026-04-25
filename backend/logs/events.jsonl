@@ -1,0 +1,6 @@
+{"trace_id": "49b04cfe-bc56-4415-a0d1-71623047e743", "source": "rfid_1", "student_id": "S001", "event": "ENTRY", "decision": "ALLOW", "reason": "VALID", "timestamp": 1777025820}
+{"trace_id": "042bf62b-e6ea-443e-8dd0-c6584f348de4", "source": "rfid_1", "student_id": "S999", "event": "ENTRY", "decision": "DENY", "reason": "UNKNOWN", "timestamp": 1777025820}
+{"trace_id": "ff20d7d2-1e2b-49fb-b05c-c893cf4c1dce", "source": "face_1", "student_id": "S100", "event": "ENTRY", "decision": "ALLOW", "reason": "VALID", "timestamp": 1777025820}
+{"trace_id": "ab341ff7-754e-4f0b-afbd-2887616d7910", "source": "manual", "student_id": "S002", "event": "EXIT", "decision": "ALLOW", "reason": "VALID", "timestamp": 1777025820}
+{"trace_id": "87b6e9a8-75ea-4713-a1c1-8fe98fb16f0b", "source": "rfid_1", "student_id": "S001", "event": "ENTRY", "decision": "ALLOW", "reason": "VALID", "timestamp": 1777026539}
+{"trace_id": "f6af6e2e-5b88-45ce-b88c-8b64c0766732", "source": "rfid_1", "student_id": "S000", "event": "ENTRY", "decision": "DENY", "reason": "UNKNOWN", "timestamp": 1777026709}

@@ -19,6 +19,13 @@ class Method(str, Enum):
 class Decision(str, Enum):
     ALLOW = "ALLOW"
     DENY = "DENY"
+    REVIEW = "REVIEW"
+
+
+class ReviewAction(BaseModel):
+    trace_id: str
+    action: str  # "confirm" or "reject"
+
 
 
 class Reason(str, Enum):

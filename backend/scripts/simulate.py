@@ -28,33 +28,28 @@ def simulate():
         return
 
     # 2. Valid RFID Entry (S001)
-    test_endpoint("/rfid/read", {
-        "source": "rfid_1",
-        "student_id": "S001",
-        "event": "ENTRY"
+    test_endpoint("/access/event", {
+        "user_id": "S001",
+        "method": "RFID",
+        "device_id": "gate_main_in"
     })
 
     # 3. Invalid RFID Entry (Unknown ID)
-    test_endpoint("/rfid/read", {
-        "source": "rfid_1",
-        "student_id": "S999",
-        "event": "ENTRY"
+    test_endpoint("/access/event", {
+        "user_id": "S999",
+        "method": "RFID",
+        "device_id": "gate_main_in"
     })
 
     # 4. Valid Face Event
-    test_endpoint("/face/event", {
-        "source": "face_1",
-        "student_id": "S100",
-        "event": "ENTRY"
+    test_endpoint("/access/event", {
+        "user_id": "S100",
+        "method": "FACE",
+        "device_id": "gate_main_in"
     })
 
     # 5. Manual Override
-    test_endpoint("/manual/override", {
-        "source": "manual",
-        "student_id": "S002",
-        "event": "EXIT",
-        "operator_id": "OP_01"
-    })
+    test_endpoint("/manual/override", {})
 
 if __name__ == "__main__":
     simulate()
