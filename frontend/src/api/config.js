@@ -2,7 +2,8 @@
 // Vite uses 'import.meta.env' for environment variables.
 // On Render, we will set VITE_API_URL to the backend URL.
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const RAW_API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+export const API_BASE_URL = RAW_API_URL.endsWith('/') ? RAW_API_URL.slice(0, -1) : RAW_API_URL;
 
 export const API_ENDPOINTS = {
     ACCESS_EVENT: `${API_BASE_URL}/access/event`,
