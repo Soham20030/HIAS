@@ -37,16 +37,31 @@ def _trigger_logic():
         print(f"[SIMULATION] Relay OFF")
 
 
-def open_gate(trace_id: str, user_id: str) -> None:
+def open_gate(trace_id: str, user_id: str, device_id: str = "local") -> None:
     """
     Trigger gate relay to open.
-    Runs in a background thread to avoid blocking the API response.
+    Can trigger local GPIO or remote COSEC device.
     """
-    print(f"[RELAY_TRIGGERED] trace_id={trace_id} | user_id={user_id}")
+    print(f"[RELAY_TRIGGERED] trace_id={trace_id} | user_id={user_id} | device={device_id}")
     log_relay(trace_id, user_id)
 
-    # Fire and forget trigger to keep API latency low
-    threading.Thread(target=_trigger_logic, daemon=True).start()
+    if "cosec" in device_id.lower():
+        # Trigger remote COSEC door
+        from app.background import COSEC_CONFIG
+        from app.adapters.cosec import COSECAdapter
+        import asyncio
+
+        adapter = COSECAdapter(COSEC_CONFIG["base_url"], COSEC_CONFIG["username"], COSEC_CONFIG["password"])
+        # We use a thread for non-blocking since open_gate is called from sync context
+        def _remote_trigger():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(adapter.open_door())
+        
+        threading.Thread(target=_remote_trigger, daemon=True).start()
+    else:
+        # Default to local GPIO
+        threading.Thread(target=_trigger_logic, daemon=True).start()
 
 
 def close_gate(trace_id: str, user_id: str) -> None:

@@ -17,6 +17,7 @@ from app.hardware import open_gate, GPIO_ENABLED
 from app.logger import log_event
 from app.database import engine, Base, get_db
 from app.models import User, Event, Setting
+from app.background import CosecWorker
 
 # Initialize Database
 Base.metadata.create_all(bind=engine)
@@ -45,6 +46,8 @@ SYSTEM_SETTINGS = {
     "require_admin_approval": False
 }
 
+COSEC_WORKER: Optional[CosecWorker] = None
+
 @app.on_event("startup")
 def startup_event():
     with next(get_db()) as db:
@@ -57,6 +60,16 @@ def startup_event():
                 SYSTEM_SETTINGS[s.key] = s.value == "True"
             else:
                 SYSTEM_SETTINGS[s.key] = s.value
+    
+    # Initialize COSEC Background Worker
+    global COSEC_WORKER
+    COSEC_WORKER = CosecWorker(process_access_request, broadcast_event)
+    asyncio.create_task(COSEC_WORKER.start())
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if COSEC_WORKER:
+        await COSEC_WORKER.stop()
 
 async def broadcast_event(event: ControllerEvent):
     """Push event to all connected SSE clients."""
@@ -94,7 +107,7 @@ def process_access_request(db: Session, user_id: str, method: Method, device_id:
 
     # 5. Trigger Hardware if ALLOWed
     if decision == Decision.ALLOW:
-        open_gate(event.trace_id, event.user_id)
+        open_gate(event.trace_id, event.user_id, device_id)
 
     # 6. Save to DB
     db_event = Event(
@@ -220,7 +233,7 @@ async def process_review_action(data: ReviewAction, db: Session = Depends(get_db
     event = REVIEW_QUEUE.pop(data.trace_id)
     if data.action == "confirm":
         event.decision = Decision.ALLOW
-        open_gate(event.trace_id, event.user_id)
+        open_gate(event.trace_id, event.user_id, event.device_id)
     else:
         event.decision = Decision.DENY
     # Update existing event in DB
