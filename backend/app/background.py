@@ -1,15 +1,16 @@
+import os
 import asyncio
 from sqlalchemy.orm import Session
 from app.adapters.cosec import COSECAdapter
 from app.database import get_db
 from app.schemas import Method
 
-# Configuration (In production, move to ENV or DB)
+# Configuration loaded from Environment Variables
 COSEC_CONFIG = {
-    "base_url": "http://192.168.1.100",
-    "username": "admin",
-    "password": "password123",
-    "poll_interval": 2.0
+    "base_url": os.getenv("COSEC_BASE_URL", "http://192.168.1.100"),
+    "username": os.getenv("COSEC_USERNAME", "admin"),
+    "password": os.getenv("COSEC_PASSWORD", "password123"),
+    "poll_interval": float(os.getenv("COSEC_POLL_INTERVAL", "2.0"))
 }
 
 # Mapping: COSEC_USER_ID -> INTERNAL_USER_ID
@@ -49,42 +50,44 @@ class CosecWorker:
 
     async def _loop(self):
         while self.running:
-            try:
-                events = await self.adapter.fetch_events(self.last_index)
-                
-                if events:
-                    # Sort by index to process in order
-                    events.sort(key=lambda x: x["index"])
-                    
-                    for raw_event in events:
-                        # Skip if already processed
-                        if raw_event["index"] <= self.last_index:
-                            continue
-                        
-                        # Map User ID
-                        internal_id = USER_MAPPING.get(raw_event["device_user_id"])
-                        if not internal_id:
-                            print(f"[COSEC_WORKER] Unknown User ID: {raw_event['device_user_id']}")
-                            continue
-
-                        # Process via core logic
-                        # We use bypass_cache=True because COSEC already ensures events are unique via index
-                        with next(get_db()) as db:
-                            event = self.process_request(
-                                db, 
-                                internal_id, 
-                                raw_event["method"], 
-                                f"cosec_device_{raw_event['index']}",
-                                bypass_cache=True
-                            )
-                            
-                            if event:
-                                await self.broadcast(event)
-                        
-                        # Update progress
-                        self.last_index = raw_event["index"]
-
-            except Exception as e:
-                print(f"[COSEC_WORKER_ERROR] {e}")
-            
+            await self._loop_once()
             await asyncio.sleep(COSEC_CONFIG["poll_interval"])
+
+    async def _loop_once(self):
+        """Single iteration of the polling loop."""
+        try:
+            events = await self.adapter.fetch_events(self.last_index)
+            
+            if events:
+                # Sort by index to process in order
+                events.sort(key=lambda x: x["index"])
+                
+                for raw_event in events:
+                    # Skip if already processed
+                    if raw_event["index"] <= self.last_index:
+                        continue
+                    
+                    # Map User ID
+                    internal_id = USER_MAPPING.get(raw_event["device_user_id"])
+                    if not internal_id:
+                        print(f"[COSEC_WORKER] Unknown User ID: {raw_event['device_user_id']}")
+                        continue
+
+                    # Process via core logic
+                    with next(get_db()) as db:
+                        event = self.process_request(
+                            db, 
+                            internal_id, 
+                            raw_event["method"], 
+                            f"cosec_device_{raw_event['index']}",
+                            bypass_cache=True
+                        )
+                        
+                        if event:
+                            await self.broadcast(event)
+                    
+                    # Update progress
+                    self.last_index = raw_event["index"]
+
+        except Exception as e:
+            print(f"[COSEC_WORKER_ERROR] {e}")
