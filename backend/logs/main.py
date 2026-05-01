@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from sse_starlette.sse import EventSourceResponse
-from storage import storage
+from logs.storage import storage
 import json
 
 app = FastAPI(title="HIAS Truth Layer - Logging Service")
