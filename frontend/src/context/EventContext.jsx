@@ -5,6 +5,7 @@ const EventContext = createContext();
 
 export function EventProvider({ children }) {
   const [events, setEvents] = useState([]);
+  const [reviewItems, setReviewItems] = useState([]);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
@@ -17,14 +18,24 @@ export function EventProvider({ children }) {
           setEvents(data.reverse()); // Newest first
         }
       } catch (err) {
-        console.warn("Initial fetch failed, using mock data", err);
-        setEvents([
-          { timestamp: new Date().toISOString(), name: "Riya Sharma", user_id: "S001", direction: "IN", method: "FACE", decision: "ALLOW", reason: "VALID" },
-          { timestamp: new Date().toISOString(), name: "Ananya Singh", user_id: "S002", direction: "IN", method: "RFID", decision: "DENY", reason: "TIME_BLOCK" },
-        ]);
+        console.warn("Initial fetch failed", err);
       }
     };
+    
+    const fetchQueue = async () => {
+      try {
+        const res = await fetch(API_ENDPOINTS.REVIEW_QUEUE);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setReviewItems(data);
+        }
+      } catch (err) {
+        console.warn("Initial review queue fetch failed", err);
+      }
+    };
+
     fetchEvents();
+    fetchQueue();
 
     // SSE Connection to Python Backend
     const evtSource = new EventSource(API_ENDPOINTS.STREAM);
@@ -33,6 +44,20 @@ export function EventProvider({ children }) {
       try {
         const data = JSON.parse(e.data);
         setEvents((prev) => [data, ...prev.slice(0, 49)]);
+        
+        // Phase 5: Queue Control Logic - Handle queue via SSE
+        if (data.decision === 'REVIEW') {
+          setReviewItems((prev) => {
+            if (!prev.find(item => item.trace_id === data.trace_id)) {
+              return [...prev, data];
+            }
+            return prev;
+          });
+        } else {
+          // If a decision was ALLOW/DENY, it means the queue item was processed
+          // Remove it from the review queue
+          setReviewItems((prev) => prev.filter(item => item.trace_id !== data.trace_id));
+        }
       } catch (err) {
         console.error("Failed to parse SSE data", err);
       }
@@ -46,7 +71,7 @@ export function EventProvider({ children }) {
 
   const triggerOverride = async (reason) => {
     try {
-      const res = await fetch(`${API_ENDPOINTS.API_BASE_URL}/manual/override`, {
+      const res = await fetch(API_ENDPOINTS.MANUAL_OVERRIDE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason })
@@ -56,6 +81,7 @@ export function EventProvider({ children }) {
       return text ? JSON.parse(text) : {};
     } catch (err) {
       console.error("Override failed", err);
+      throw err;
     }
   };
 
@@ -77,7 +103,7 @@ export function EventProvider({ children }) {
   };
 
   return (
-    <EventContext.Provider value={{ events, connected, triggerOverride, triggerSimulation }}>
+    <EventContext.Provider value={{ events, reviewItems, connected, triggerOverride, triggerSimulation }}>
       {children}
     </EventContext.Provider>
   );

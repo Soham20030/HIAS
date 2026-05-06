@@ -20,4 +20,5 @@ export const API_ENDPOINTS = {
     USERS_SEARCH: `${API_BASE_URL}/users/search`,
     STATS_SUMMARY: `${API_BASE_URL}/stats/summary`,
     SIMULATE_REVIEW: `${API_BASE_URL}/simulate/review`,
+    MANUAL_OVERRIDE: `${API_BASE_URL}/manual/override`,
 };

@@ -270,6 +270,7 @@ async def simulate_review_event(db: Session = Depends(get_db)):
         event.decision = Decision.REVIEW
         event.reason = Reason.UNKNOWN
         REVIEW_QUEUE[event.trace_id] = event
+        await broadcast_event(event)
     return event
 
 @app.get("/reports/stats")

@@ -2,7 +2,7 @@ import { Check, X, Search, Clock, Fingerprint } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import ConfidenceBar from './ConfidenceBar';
 
-export default function ReviewCard({ data, onConfirm, onReject, onSearch, active }) {
+export default function ReviewCard({ data, onConfirm, onReject, onSearch, active, loading }) {
   return (
     <div className={`card ${active ? 'active-card' : ''}`} style={{
       display: 'grid',
@@ -12,7 +12,8 @@ export default function ReviewCard({ data, onConfirm, onReject, onSearch, active
       border: active ? '2px solid #ff3b8f' : '1px solid #1e293b',
       transition: 'all 0.2s ease',
       marginBottom: '12px',
-      opacity: active ? 1 : 0.7
+      opacity: (active && !loading) ? 1 : 0.7,
+      pointerEvents: loading ? 'none' : 'auto'
     }}>
       {/* Image (Left) */}
       <div style={{ width: '120px', height: '120px', backgroundColor: '#0a0c14', borderRadius: '6px', overflow: 'hidden' }}>
@@ -28,7 +29,7 @@ export default function ReviewCard({ data, onConfirm, onReject, onSearch, active
       {/* Details (Center) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h3 style={{ fontSize: '18px' }}>{data.student_id || 'UNKNOWN_ID'}</h3>
+          <h3 style={{ fontSize: '18px' }}>{data.user_id || 'UNKNOWN_ID'}</h3>
           <StatusBadge type="REVIEW" />
         </div>
         
@@ -39,7 +40,10 @@ export default function ReviewCard({ data, onConfirm, onReject, onSearch, active
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Fingerprint size={14} />
-            ID: {data.trace_id?.substring(0, 8)}...
+            {data.trace_id?.substring(0, 8)}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase' }}>
+            {data.method}
           </div>
         </div>
 
@@ -56,22 +60,25 @@ export default function ReviewCard({ data, onConfirm, onReject, onSearch, active
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button 
           onClick={onConfirm} 
+          disabled={loading}
           className="btn-primary" 
-          style={{ backgroundColor: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px' }}
+          style={{ backgroundColor: loading ? '#0f172a' : '#22c55e', color: loading ? '#64748b' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', border: loading ? '1px solid #1e293b' : 'none', cursor: loading ? 'not-allowed' : 'pointer' }}
         >
-          <Check size={16} /> CONFIRM <span style={{ fontSize: '10px', opacity: 0.7 }}>(C)</span>
+          <Check size={16} /> {loading ? 'PROCESSING...' : 'CONFIRM'} <span style={{ fontSize: '10px', opacity: 0.7 }}>(C)</span>
         </button>
         <button 
           onClick={onSearch} 
-          style={{ backgroundColor: '#1e293b', color: 'white', border: 'none', borderRadius: '6px', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          disabled={loading}
+          style={{ backgroundColor: loading ? '#0f172a' : '#1e293b', color: loading ? '#64748b' : 'white', border: 'none', borderRadius: '6px', padding: '8px', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
           <Search size={16} /> SEARCH <span style={{ fontSize: '10px', opacity: 0.7 }}>(S)</span>
         </button>
         <button 
           onClick={onReject} 
-          style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          disabled={loading}
+          style={{ backgroundColor: loading ? '#0f172a' : '#ef4444', color: loading ? '#64748b' : 'white', border: 'none', borderRadius: '6px', padding: '8px', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
-          <X size={16} /> REJECT <span style={{ fontSize: '10px', opacity: 0.7 }}>(R)</span>
+          <X size={16} /> {loading ? 'PROCESSING...' : 'REJECT'} <span style={{ fontSize: '10px', opacity: 0.7 }}>(R)</span>
         </button>
       </div>
     </div>

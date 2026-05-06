@@ -1,30 +1,23 @@
 import { useState, useEffect } from 'react';
 import ReviewCard from '../components/ui/ReviewCard';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, AlertTriangle } from 'lucide-react';
 import { API_ENDPOINTS } from '../api/config';
+import { useEvents } from '../context/EventContext';
 
 export default function ReviewQueue({ onSearchUser }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { reviewItems: items } = useEvents();
+  const [processingIds, setProcessingIds] = useState(new Set());
+  const [error, setError] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const fetchQueue = async () => {
-    try {
-      const res = await fetch(API_ENDPOINTS.REVIEW_QUEUE);
-      const data = await res.json();
-      setItems(data);
-    } catch (err) {
-      console.error("Failed to fetch review queue", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // When items change, ensure activeIndex is valid
   useEffect(() => {
-    fetchQueue();
-    const interval = setInterval(fetchQueue, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    if (activeIndex >= items.length && items.length > 0) {
+      setActiveIndex(items.length - 1);
+    } else if (items.length === 0) {
+      setActiveIndex(0);
+    }
+  }, [items, activeIndex]);
 
   const handleAction = async (trace_id, action, user_id) => {
     if (action === 'search') {
@@ -32,21 +25,37 @@ export default function ReviewQueue({ onSearchUser }) {
       return;
     }
     
+    if (processingIds.has(trace_id)) return; // Prevent duplicate clicks
+
+    setProcessingIds(prev => new Set(prev).add(trace_id));
+    setError(null);
+    
     try {
-      await fetch(API_ENDPOINTS.REVIEW_ACTION, {
+      const res = await fetch(API_ENDPOINTS.REVIEW_ACTION, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trace_id, action })
       });
-      fetchQueue();
+      if (!res.ok) {
+        throw new Error('API request failed');
+      }
+      // Success!
+      // The event will be removed from `items` automatically via SSE
     } catch (err) {
       console.error("Failed to process review action", err);
+      setError(`Failed to process action for event ${trace_id.substring(0,8)}. Please retry.`);
+    } finally {
+      // Remove from processing lock
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(trace_id);
+        return next;
+      });
     }
   };
 
   const simulateEvent = async () => {
     await fetch(API_ENDPOINTS.SIMULATE_REVIEW, { method: 'POST' });
-    fetchQueue();
   };
 
 
@@ -56,8 +65,8 @@ export default function ReviewQueue({ onSearchUser }) {
       const currentItem = items[activeIndex];
       if (!currentItem) return;
 
-      if (key === 'c') handleAction(currentItem.trace_id, 'confirm');
-      if (key === 'r') handleAction(currentItem.trace_id, 'reject');
+      if (key === 'c' && !processingIds.has(currentItem.trace_id)) handleAction(currentItem.trace_id, 'confirm');
+      if (key === 'r' && !processingIds.has(currentItem.trace_id)) handleAction(currentItem.trace_id, 'reject');
       if (key === 's') handleAction(currentItem.trace_id, 'search', currentItem.user_id);
       if (key === 'arrowdown') setActiveIndex(prev => Math.min(items.length - 1, prev + 1));
       if (key === 'arrowup') setActiveIndex(prev => Math.max(0, prev - 1));
@@ -91,6 +100,13 @@ export default function ReviewQueue({ onSearchUser }) {
       </div>
 
 
+      {error && (
+        <div style={{ backgroundColor: '#7f1d1d', color: '#fca5a5', padding: '12px 16px', borderRadius: '6px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <AlertTriangle size={20} />
+          <span>{error}</span>
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {items.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '100px', color: '#64748b' }}>
@@ -104,12 +120,12 @@ export default function ReviewQueue({ onSearchUser }) {
               key={item.trace_id} 
               data={item} 
               active={index === activeIndex}
+              loading={processingIds.has(item.trace_id)}
               onConfirm={() => handleAction(item.trace_id, 'confirm')}
               onReject={() => handleAction(item.trace_id, 'reject')}
               onSearch={() => handleAction(item.trace_id, 'search', item.user_id)}
             />
           ))
-
         )}
       </div>
 

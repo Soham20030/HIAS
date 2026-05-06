@@ -42,6 +42,7 @@ export default function LiveMonitor() {
           <thead style={{ position: 'sticky', top: 0, backgroundColor: '#111420', zIndex: 1 }}>
             <tr>
               <th style={{ padding: '16px' }}>Time</th>
+              <th>Trace ID</th>
               <th>Subject</th>
               <th>Direction</th>
               <th>Method</th>
@@ -52,6 +53,7 @@ export default function LiveMonitor() {
             {events.map((e, i) => (
               <tr key={i} style={{ borderBottom: '1px solid #1e293b' }}>
                 <td style={{ padding: '16px', color: '#94a3b8', fontSize: '13px' }}>{new Date(e.timestamp).toLocaleTimeString()}</td>
+                <td style={{ color: '#64748b', fontSize: '12px', fontFamily: 'monospace' }}>{e.trace_id?.substring(0, 8)}</td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

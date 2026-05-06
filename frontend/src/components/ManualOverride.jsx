@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Lock, ShieldAlert } from 'lucide-react';
+import { Lock, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { useEvents } from '../context/EventContext';
 
 export default function ManualOverride() {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { triggerOverride } = useEvents();
 
   const trigger = async () => {
     if (!reason) {
@@ -11,19 +14,14 @@ export default function ManualOverride() {
       return;
     }
     setLoading(true);
+    setError(null);
     try {
-      await fetch("http://<PI-IP>:3000/manual/override", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ reason })
-      });
+      await triggerOverride(reason);
       setReason("");
       alert("Gate Override Triggered");
     } catch (err) {
       console.error(err);
-      alert("Failed to trigger override");
+      setError("Failed to trigger override. Ensure system is online.");
     } finally {
       setLoading(false);
     }
@@ -39,6 +37,12 @@ export default function ManualOverride() {
       </p>
       
       <div style={{ marginBottom: '12px' }}>
+        {error && (
+          <div style={{ backgroundColor: '#7f1d1d', color: '#fca5a5', padding: '8px', borderRadius: '4px', marginBottom: '12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertTriangle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
         <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Reason (Required)</label>
         <input
           placeholder="Enter reason..."
